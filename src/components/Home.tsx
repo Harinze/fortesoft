@@ -25,66 +25,93 @@ interface ProductsResponse {
   products: Product[];
 }
 
-export default function ProductCards() {
+const ProductCards = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get<ProductsResponse>("https://dummyjson.com/products")
+    axios
+      .get<ProductsResponse>("https://dummyjson.com/products")
       .then((res) => {
         setProducts(res.data.products);
+        setLoading(false);
       })
       .catch((err) => {
-        console.error("Failed to fetch products:", err);
+        console.error("Error fetching products", err);
+        setLoading(false);
       });
   }, []);
 
-  const toggleCard = (id: number) => {
-    setExpandedCardId((prev) => (prev === id ? null : id));
+  const handleToggle = (id: number) => {
+    setExpandedId((prev) => (prev === id ? null : id));
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-      {products.map((product) => (
-        <div
-          key={product.id}
-          className="bg-white shadow-xl rounded-2xl p-4 transition-transform hover:scale-105 cursor-pointer"
-          onClick={() => toggleCard(product.id)}
-        >
-          {expandedCardId === product.id ? (
-            <div className="space-y-2">
+    <div className="p-6">
+      <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">
+        Welcome to Fortesoft Products Cards
+      </h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => {
+          const isExpanded = expandedId === product.id;
+
+          return (
+            <div
+              key={product.id}
+              onClick={() => handleToggle(product.id)}
+              className={`bg-white rounded-xl shadow-lg p-4 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl ${
+                isExpanded ? "border-2 border-blue-500" : ""
+              }`}
+            >
               <img
                 src={product.thumbnail}
                 alt={product.title}
-                className="w-full h-48 object-contain rounded-md"
+                className={`w-full object-contain rounded-md mb-4 transition-all duration-300 ${
+                  isExpanded ? "h-48" : "h-60"
+                }`}
               />
-              <h2 className="text-xl font-bold">{product.title}</h2>
-              <p className="text-sm text-gray-600">{product.description}</p>
-              <p className="text-sm text-gray-800 font-semibold">Price: ${product.price}</p>
-              <p className="text-sm text-gray-800">Rating: {product.rating}</p>
-              <p className="text-sm text-gray-600">Stock: {product.stock}</p>
-              <p className="text-sm text-gray-600">Brand: {product.brand}</p>
-              <p className="text-sm text-gray-600">Category: {product.category}</p>
-              <p className="text-sm text-gray-600">Return Policy: {product.returnPolicy}</p>
-              <p className="text-sm text-gray-600">Minimum Order: {product.minimumOrderQuantity}</p>
-              <a
-                href={product.meta.qrCode}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 underline text-sm"
-              >
-                View QR Code
-              </a>
+
+              {isExpanded && (
+                <div className="space-y-2">
+                  <h2 className="text-xl font-semibold">{product.title}</h2>
+                  <p className="text-sm text-gray-700">{product.description}</p>
+                  <p className="text-sm text-gray-800 font-semibold">
+                    Price: ${product.price}
+                  </p>
+                  <p className="text-sm text-gray-700">Rating: {product.rating}</p>
+                  <p className="text-sm text-gray-700">Stock: {product.stock}</p>
+                  <p className="text-sm text-gray-700">Brand: {product.brand}</p>
+                  <p className="text-sm text-gray-700">Category: {product.category}</p>
+                  <p className="text-sm text-gray-700">Return: {product.returnPolicy}</p>
+                  <p className="text-sm text-gray-700">
+                    Min Order: {product.minimumOrderQuantity}
+                  </p>
+                  <a
+                    href={product.meta.qrCode}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline text-sm"
+                  >
+                    View QR Code
+                  </a>
+                </div>
+              )}
             </div>
-          ) : (
-            <img
-              src={product.thumbnail}
-              alt={product.title}
-              className="w-full h-60 object-contain rounded-lg"
-            />
-          )}
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
-}
+};
+
+export default ProductCards;
